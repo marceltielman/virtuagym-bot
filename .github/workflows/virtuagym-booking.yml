@@ -41,6 +41,8 @@ jobs:
           VG_WEEK_QUERY: ${{ secrets.VG_WEEK_QUERY }}
           VG_CLASS_NAME: ${{ secrets.VG_CLASS_NAME }}
           VG_CLASS_TIME: ${{ secrets.VG_CLASS_TIME }}
+          VG_TEST_MODE: ${{ secrets.VG_TEST_MODE }}
+          VG_STORAGE_STATE: ${{ secrets.VG_STORAGE_STATE }}
 
       - name: Upload screenshots
         if: always()
