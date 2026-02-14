@@ -10,7 +10,8 @@ const CFG = {
   className: process.env.VG_CLASS_NAME,
   classTime: process.env.VG_CLASS_TIME,
   testMode: process.env.VG_TEST_MODE === "1",
-  storageStatePath: process.env.VG_STORAGE_STATE || "storageState.json",
+  // storageStatePath: process.env.VG_STORAGE_STATE || "storageState.json",
+  storageStatePath: "storageState.json",
 };
 
 function assertEnv() {
