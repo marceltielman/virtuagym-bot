@@ -1,0 +1,43 @@
+name: Virtuagym booking
+
+on:
+  schedule:
+    - cron: "1 18 * * 1"  # maandag 20:01 in zomertijd
+    - cron: "1 19 * * 1"  # maandag 20:01 in wintertijd
+  workflow_dispatch:
+
+concurrency:
+  group: virtuagym-booking
+  cancel-in-progress: true
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: Run booking
+        env:
+          VG_LOGIN_URL: ${{ secrets.VG_LOGIN_URL }}
+          VG_EMAIL: ${{ secrets.VG_EMAIL }}
+          VG_PASSWORD: ${{ secrets.VG_PASSWORD }}
+          VG_CLASS_NAME: ${{ secrets.VG_CLASS_NAME }}
+        run: node book-virtuagym.js
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: "*.png"
