@@ -23,17 +23,24 @@ jobs:
           node-version: "20"
           cache: "npm"
 
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-      - run: npx playwright install --with-deps chromium
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
 
-      - name: Run booking
+      - name: Restore storage state
+        run: echo "$VG_STORAGE_STATE" | base64 --decode > storageState.json
+        env:
+          VG_STORAGE_STATE: ${{ secrets.VG_STORAGE_STATE }}
+
+      - name: Run booking bot
+        run: node book-virtuagym.js
         env:
           VG_LOGIN_URL: ${{ secrets.VG_LOGIN_URL }}
-          VG_EMAIL: ${{ secrets.VG_EMAIL }}
-          VG_PASSWORD: ${{ secrets.VG_PASSWORD }}
+          VG_WEEK_QUERY: ${{ secrets.VG_WEEK_QUERY }}
           VG_CLASS_NAME: ${{ secrets.VG_CLASS_NAME }}
-        run: node book-virtuagym.js
+          VG_CLASS_TIME: ${{ secrets.VG_CLASS_TIME }}
 
       - name: Upload screenshots
         if: always()
