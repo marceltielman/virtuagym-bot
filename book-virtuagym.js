@@ -74,9 +74,9 @@ async function takeShot(page, name) {
   console.log("Class:", CFG.className, "|", CFG.classTime);
 
   const browser = await chromium.launch({
-    // headless: true,
+    headless: true,
     // Voor lokaal debuggen kun je dit gebruiken:
-    headless: false, slowMo: 150
+    // headless: false, slowMo: 150
   });
 
   const context = await browser.newContext({
