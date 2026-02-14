@@ -25,6 +25,8 @@ function assertEnv() {
 }
 
 function shouldRunNowAmsterdam() {
+  console.log("is test mode?", CFG.testMode);
+  
   if (CFG.testMode) return true;
   const now = DateTime.now().setZone(ZONE);
   return now.weekday === 1 && now.toFormat("HH:mm") === "20:01"; // Monday 20:01
