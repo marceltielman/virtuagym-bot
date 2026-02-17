@@ -87,16 +87,16 @@ async function takeShot(page, name) {
     process.exit(0);
   }
 
-  const now = DateTime.now().setZone("Europe/Amsterdam");
+  const now = DateTime.now().setZone(ZONE);
   const target = now.set({ hour: 20, minute: 1, second: 0, millisecond: 0 });
 
+  // Alleen wachten als we vóór 20:01 zitten
   if (now < target) {
     const ms = target.diff(now).as("milliseconds");
 
-    // Safety cap (GitHub timeout bescherming)
     const sleepMs = Math.min(ms, 10 * 60 * 1000);
 
-    console.log(`⏳ Waiting ${Math.round(sleepMs / 1000)}s until 20:01`);
+    console.log(`⏳ Waiting ${Math.round(sleepMs / 1000)}s until booking time`);
     await new Promise(r => setTimeout(r, sleepMs));
   }
 
@@ -148,10 +148,9 @@ async function takeShot(page, name) {
     // 4) Open modal
     await tile.click();
 
-    const cancelBtn = page.locator('.ui-button .text:has-text("Cancel booking")');
-    await cancelBtn.waitFor({ timeout: 5000 });
+    const cancelBtn = page.locator('text=Cancel booking');
 
-    if (await cancelBtn.first().count()) {
+    if (await cancelBtn.count()) {
       console.log("Already booked — exiting.");
       process.exit(0);
     }
