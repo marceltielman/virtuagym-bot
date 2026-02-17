@@ -2,8 +2,14 @@ name: Virtuagym booking
 
 on:
   schedule:
-    - cron: "1 18 * * 1"  # maandag 20:01 in zomertijd
-    - cron: "1 19 * * 1"  # maandag 20:01 in wintertijd
+    # Zomertijd (CEST)
+    - cron: "45-59/5 17 * * 1"
+    - cron: "0-5/5 18 * * 1"
+
+    # Wintertijd (CET)
+    - cron: "45-59/5 18 * * 1"
+    - cron: "0-5/5 19 * * 1"
+
   workflow_dispatch:
 
 concurrency:

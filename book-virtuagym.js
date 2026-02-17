@@ -25,6 +25,24 @@ function assertEnv() {
   }
 }
 
+function withinAmsterdamWindow() {
+  console.log("is test mode?", CFG.testMode, process.env.VG_TEST_MODE);
+
+  if (CFG.testMode) return true;
+
+  const now = DateTime.now().setZone(ZONE);
+
+  // Monday
+  if (now.weekday !== 1) return false;
+
+  // Window 20:01–20:03
+  const minutes = now.hour * 60 + now.minute;
+  const start = 20 * 60 + 1;
+  const end = 20 * 60 + 3;
+
+  return minutes >= start && minutes <= end;
+}
+
 function shouldRunNowAmsterdam() {
   console.log("is test mode?", CFG.testMode, process.env.VG_TEST_MODE);
 
@@ -32,6 +50,7 @@ function shouldRunNowAmsterdam() {
   const now = DateTime.now().setZone(ZONE);
   return now.weekday === 1 && now.toFormat("HH:mm") === "20:01"; // Monday 20:01
 }
+
 
 function computeTargetMondayAndWeekUrl() {
   const now = DateTime.now().setZone(ZONE);
@@ -61,10 +80,24 @@ async function takeShot(page, name) {
 (async () => {
   assertEnv();
 
-  if (!shouldRunNowAmsterdam()) {
+  if (!withinAmsterdamWindow()) {
     const now = DateTime.now().setZone(ZONE);
-    console.log(`Skip: now=${now.toISO()} (${ZONE}), not Monday 20:01`);
+
+    console.log(`Skip: now=${now.toFormat("cccc HH:mm")} (${ZONE}), outside window`);
     process.exit(0);
+  }
+
+  const now = DateTime.now().setZone("Europe/Amsterdam");
+  const target = now.set({ hour: 20, minute: 1, second: 0, millisecond: 0 });
+
+  if (now < target) {
+    const ms = target.diff(now).as("milliseconds");
+
+    // Safety cap (GitHub timeout bescherming)
+    const sleepMs = Math.min(ms, 10 * 60 * 1000);
+
+    console.log(`⏳ Waiting ${Math.round(sleepMs / 1000)}s until 20:01`);
+    await new Promise(r => setTimeout(r, sleepMs));
   }
 
   const { targetMonday, dayClass, weekUrl } = computeTargetMondayAndWeekUrl();
@@ -114,6 +147,14 @@ async function takeShot(page, name) {
 
     // 4) Open modal
     await tile.click();
+
+    const cancelBtn = page.locator('.ui-button .text:has-text("Cancel booking")');
+    await cancelBtn.waitFor({ timeout: 5000 });
+
+    if (await cancelBtn.first().count()) {
+      console.log("Already booked — exiting.");
+      process.exit(0);
+    }
 
     // 5) Wacht op modal / booking knop
     // const bookBtn = page.getByRole("button", { name: /reserveer|book|inschrijven|aanmelden/i });
