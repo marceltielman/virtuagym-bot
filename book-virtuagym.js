@@ -91,7 +91,7 @@ async function takeShot(page, name) {
   const target = now.set({ hour: 20, minute: 1, second: 0, millisecond: 0 });
 
   // Alleen wachten als we vóór 20:01 zitten
-  if (now < target) {
+  if (now < target && !CFG.testMode) {
     const ms = target.diff(now).as("milliseconds");
 
     const sleepMs = Math.min(ms, 10 * 60 * 1000);
