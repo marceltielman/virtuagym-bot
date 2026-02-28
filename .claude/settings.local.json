@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:www.postman.com)",
+      "WebFetch(domain:apitracker.io)",
+      "Bash(chmod +x:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm run:*)",
+      "Bash(git:*)"
+    ]
+  }
+}
