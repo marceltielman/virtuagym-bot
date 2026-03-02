@@ -49,8 +49,8 @@ function withinAmsterdamWindow() {
   if (now.weekday !== 1) return false;
 
   const minutes = now.hour * 60 + now.minute;
-  const start = 20 * 60;     // 20:00
-  const end = 20 * 60 + 3;   // 20:03
+  const start = 19 * 60 + 50; // 19:50 (allow early start, script sleeps until 20:00)
+  const end = 20 * 60 + 3;    // 20:05
 
   return minutes >= start && minutes <= end;
 }
