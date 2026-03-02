@@ -164,6 +164,9 @@ function computeTargetMondayAndWeekUrl() {
     logError("Error:", e?.message || e);
     process.exitCode = 1;
   } finally {
+    // Save refreshed session cookies for next run
+    await context.storageState({ path: CFG.storageStatePath });
+    log("Storage state saved.");
     await browser.close();
   }
 })();

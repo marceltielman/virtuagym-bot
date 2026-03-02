@@ -171,6 +171,9 @@ async function takeShot(page, name) {
     await takeShot(page, "error.png");
     process.exitCode = 1;
   } finally {
+    // Save refreshed session cookies for next run
+    await context.storageState({ path: CFG.storageStatePath });
+    console.log("Storage state saved.");
     await browser.close();
   }
 })();
