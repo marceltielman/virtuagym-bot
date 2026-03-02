@@ -114,6 +114,13 @@ function computeTargetMondayAndWeekUrl() {
   try {
     // 1) Open the target week
     await page.goto(weekUrl, { waitUntil: "networkidle" });
+    
+    const needToLogin = await page.locator('#navbar .btn-login').count() > 0;
+
+    if (needToLogin) {
+      log("Not logged in. Please log in manually and save storage state.");
+      throw new Error("Not logged in. Please log in manually and save storage state.");
+    }
     await page.waitForSelector("#agenda", { timeout: 15000 });
 
     // 2) Find the exact tile (date + classname + time)
