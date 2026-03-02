@@ -8,8 +8,7 @@
       "Bash(git checkout:*)",
       "Bash(npm run:*)",
       "Bash(git:*)",
-      "Bash(scp:*)",
-      "Bash(ssh:*)"
+      "Bash(scp:*)"
     ]
   }
 }
