@@ -111,62 +111,76 @@ function computeTargetMondayAndWeekUrl() {
 
   const page = await context.newPage();
 
-  try {
-    // 1) Open the target week
-    await page.goto(weekUrl, { waitUntil: "networkidle" });
-    
-    const needToLogin = await page.locator('#navbar .btn-login').count() > 0;
+  const MAX_ATTEMPTS = 4;       // 4 attempts × 15s = ~1 minute
+  const RETRY_INTERVAL_MS = 15_000;
 
-    if (needToLogin) {
-      log("Not logged in. Please log in manually and save storage state.");
-      throw new Error("Not logged in. Please log in manually and save storage state.");
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      log(`Booking attempt ${attempt}/${MAX_ATTEMPTS}`);
+
+      // 1) Open the target week (reload each attempt to get fresh state)
+      await page.goto(weekUrl, { waitUntil: "networkidle" });
+
+      const needToLogin = await page.locator('#navbar .btn-login').count() > 0;
+
+      if (needToLogin) {
+        throw new Error("Not logged in. Please log in manually and save storage state.");
+      }
+      await page.waitForSelector("#agenda", { timeout: 15000 });
+
+      // 2) Find the exact tile (date + classname + time)
+      const tile = page.locator(
+        `#schedule_content .class.${dayClass}:has(span.classname:text-is("${CFG.className}")):has(span.time:text-is("${CFG.classTime}"))`
+      ).first();
+
+      if (!(await tile.count())) {
+        throw new Error("Class tile not found. Check VG_CLASS_NAME / VG_CLASS_TIME exact match.");
+      }
+
+      // 3) If FULL → stop (no point retrying)
+      const fullLabelCount = await tile.locator("div.full", { hasText: "FULL" }).count();
+      const hasClassFull = await tile.evaluate(el => el.classList.contains("class_full"));
+
+      if (fullLabelCount > 0 || hasClassFull) {
+        log("Class is FULL (or class_full). Stopping.");
+        break;
+      }
+
+      // 4) Open modal
+      await tile.click();
+
+      const cancelBtn = page.locator('text=Cancel booking');
+
+      if (await cancelBtn.count()) {
+        log("Already booked — done.");
+        break;
+      }
+
+      // 5) Wait for booking button
+      const bookBtn = page.locator("#book_btn");
+      await bookBtn.first().waitFor({ timeout: 15000 });
+
+      // 6) Click book
+      await bookBtn.first().click();
+      await page.waitForTimeout(1500);
+
+      log("Booking clicked — success.");
+      break;
+    } catch (e) {
+      logError(`Attempt ${attempt} failed:`, e?.message || e);
+
+      if (attempt < MAX_ATTEMPTS) {
+        log(`Retrying in ${RETRY_INTERVAL_MS / 1000}s...`);
+        await new Promise(r => setTimeout(r, RETRY_INTERVAL_MS));
+      } else {
+        logError("All attempts exhausted.");
+        process.exitCode = 1;
+      }
     }
-    await page.waitForSelector("#agenda", { timeout: 15000 });
-
-    // 2) Find the exact tile (date + classname + time)
-    const tile = page.locator(
-      `#schedule_content .class.${dayClass}:has(span.classname:text-is("${CFG.className}")):has(span.time:text-is("${CFG.classTime}"))`
-    ).first();
-
-    if (!(await tile.count())) {
-      throw new Error("Class tile not found. Check VG_CLASS_NAME / VG_CLASS_TIME exact match.");
-    }
-
-    // 3) If FULL → stop
-    const fullLabelCount = await tile.locator("div.full", { hasText: "FULL" }).count();
-    const hasClassFull = await tile.evaluate(el => el.classList.contains("class_full"));
-
-    if (fullLabelCount > 0 || hasClassFull) {
-      log("Class is FULL (or class_full). Skipping booking.");
-      process.exit(0);
-    }
-
-    // 4) Open modal
-    await tile.click();
-
-    const cancelBtn = page.locator('text=Cancel booking');
-
-    if (await cancelBtn.count()) {
-      log("Already booked — exiting.");
-      process.exit(0);
-    }
-
-    // 5) Wait for booking button
-    const bookBtn = page.locator("#book_btn");
-    await bookBtn.first().waitFor({ timeout: 15000 });
-
-    // 6) Click book
-    await bookBtn.first().click();
-    await page.waitForTimeout(1500);
-
-    log("Booking clicked.");
-  } catch (e) {
-    logError("Error:", e?.message || e);
-    process.exitCode = 1;
-  } finally {
-    // Save refreshed session cookies for next run
-    await context.storageState({ path: CFG.storageStatePath });
-    log("Storage state saved.");
-    await browser.close();
   }
+
+  // Save refreshed session cookies for next run
+  await context.storageState({ path: CFG.storageStatePath });
+  log("Storage state saved.");
+  await browser.close();
 })();
