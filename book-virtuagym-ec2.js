@@ -164,8 +164,7 @@ function computeTargetMondayAndWeekUrl() {
       await bookBtn.first().click();
       await page.waitForTimeout(1500);
 
-      log("Booking clicked — success.");
-      break;
+      log("Booking clicked — success. Retrying to confirm...");
     } catch (e) {
       logError(`Attempt ${attempt} failed:`, e?.message || e);
 
