@@ -132,16 +132,31 @@ cd ~/virtuagym
 npm run book:test
 ```
 
-### 6. Check cron
+### 6. Set timezone and cron
 
-The setup script installs two cron entries (wintertijd / CET timing):
+Set the EC2 timezone to Amsterdam so cron automatically adjusts for summer/winter time:
+
+```bash
+sudo timedatectl set-timezone Europe/Amsterdam
+sudo systemctl restart cron
+```
+
+The setup script installs cron entries in Amsterdam time:
 
 ```
-55-59 18 * * 1  →  runs at 18:55–18:59 UTC (19:55–19:59 CET)
-0-5   19 * * 1  →  runs at 19:00–19:05 UTC (20:00–20:05 CET)
+55 19 * * 1    →  19:55 Amsterdam time
+0-3 20 * * 1   →  20:00–20:03 Amsterdam time
 ```
 
 The script itself sleeps until exactly 20:00 Amsterdam time before booking.
+
+To edit the crontab:
+
+```bash
+crontab -e
+# or with vim:
+EDITOR=vim crontab -e
+```
 
 Check cron is installed:
 
@@ -173,7 +188,7 @@ cat ~/virtuagym/cron.log
 | "Not logged in" error | Re-run `node save-session.js` locally and re-upload `storageState.json` |
 | "Class tile not found" | Check that `VG_CLASS_NAME` and `VG_CLASS_TIME` exactly match what's shown on the schedule |
 | Script exits with "outside window" | Normal behavior outside Monday 19:50–20:03 AMS. Use `npm run book:test` to test anytime |
-| Cron not firing | Verify with `crontab -l`. Check that cron times match your timezone (wintertijd vs zomertijd) |
+| Cron not firing | Verify with `crontab -l` and `timedatectl`. Ensure timezone is `Europe/Amsterdam` |
 
 ## Scripts
 
