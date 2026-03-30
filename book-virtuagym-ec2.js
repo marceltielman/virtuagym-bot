@@ -137,6 +137,29 @@ function computeTargetMondayAndWeekUrl() {
         throw new Error("Class tile not found. Check VG_CLASS_NAME / VG_CLASS_TIME exact match.");
       }
 
+      // Log tile details + surrounding tiles for debugging
+      const tileClassName = await tile.locator("span.classname").textContent().catch(() => "(n/a)");
+      const tileTime = await tile.locator("span.time").textContent().catch(() => "(n/a)");
+      log(`Tile found — classname: "${tileClassName}", time: "${tileTime}"`);
+
+      const tileHandle = await tile.elementHandle();
+      const prevTile = await tileHandle.evaluate(el => {
+        const prev = el.previousElementSibling;
+        if (!prev) return null;
+        const cn = prev.querySelector("span.classname")?.textContent ?? "(n/a)";
+        const t = prev.querySelector("span.time")?.textContent ?? "(n/a)";
+        return { className: cn, time: t };
+      });
+      const nextTile = await tileHandle.evaluate(el => {
+        const next = el.nextElementSibling;
+        if (!next) return null;
+        const cn = next.querySelector("span.classname")?.textContent ?? "(n/a)";
+        const t = next.querySelector("span.time")?.textContent ?? "(n/a)";
+        return { className: cn, time: t };
+      });
+      if (prevTile) log(`Tile before — classname: "${prevTile.className}", time: "${prevTile.time}"`);
+      if (nextTile) log(`Tile after  — classname: "${nextTile.className}", time: "${nextTile.time}"`);
+
       // 3) If FULL → stop (no point retrying)
       const fullLabelCount = await tile.locator("div.full", { hasText: "FULL" }).count();
       const hasClassFull = await tile.evaluate(el => el.classList.contains("class_full"));
