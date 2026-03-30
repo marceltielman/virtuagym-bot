@@ -156,11 +156,18 @@ function computeTargetMondayAndWeekUrl() {
         break;
       }
 
-      // 5) Wait for booking button
+      // 5) Check for "Too early to book"
+      const tooEarly = page.locator('text=Too early to book');
+      if (await tooEarly.count()) {
+        log("Too early to book. Stopping.");
+        break;
+      }
+
+      // 6) Wait for booking button
       const bookBtn = page.locator("#book_btn");
       await bookBtn.first().waitFor({ timeout: 15000 });
 
-      // 6) Click book
+      // 7) Click book
       await bookBtn.first().click();
       await page.waitForTimeout(1500);
 
