@@ -171,6 +171,7 @@ function computeTargetMondayAndWeekUrl() {
 
       // 4) Open modal
       await tile.click();
+      await page.waitForTimeout(2500);
 
       const cancelBtn = page.locator('text=Cancel booking');
 
